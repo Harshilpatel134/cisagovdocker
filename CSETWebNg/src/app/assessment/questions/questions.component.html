@@ -1,0 +1,141 @@
+<!----------------------
+
+   Copyright 2019 Battelle Energy Alliance, LLC
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+-------------------------->
+<div class="white-panel">
+  <div id="top"></div>
+  <div class="d-flex flex-row flex-wrap justify-content-between align-items-start flex-11a mb-4">
+    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+      <label class="btn btn-app-mode form-check-label" [class.active]="assessSvc.applicationMode == 'Q'" (click)="setMode('Q')">
+        <input name="app_mode" class="form-check-input" type="radio" autocomplete="off" [checked]="assessSvc.applicationMode == 'Q'">
+          Questions Mode
+      </label>
+      <label *ngIf="setHasRequirements" class="btn btn-app-mode form-check-label" [class.active]="assessSvc.applicationMode == 'R'" (click)="setMode('R')">
+        <input name="app_mode" class="form-check-input" type="radio" autocomplete="off" [checked]="assessSvc.applicationMode == 'R'">
+          Requirements Mode
+      </label>
+    </div>
+
+    <div class="d-flex flex-column align-items-start flex-00a">
+      <div class="d-flex align-items-start flex-11a">
+        <button class="btn btn-primary m-0 questions-header-collapse-button-radius" (click)="expandAll(false)">Collapse
+          All</button>
+        <button class="btn btn-primary m-0 br-0" (click)="expandAll(true)">Expand All</button>
+        <button class="btn btn-primary m-0 questions-header-filter-button-radius" (click)="showFilterDialog()">
+          <i class="cset-icons-filter"></i>
+        </button>
+      </div>
+
+      <div *ngIf="!browserIsIE()" class="mt-2">
+        <input type="checkbox" id="auto_load_supp" name="auto_load_supp" [(ngModel)]="autoLoadSupplementalInfo"
+          (change)="persistAutoLoadSetting()">
+        <label for="auto_load_supp" style="margin: 0 5px;">Auto-load Supplemental</label>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="domains == null">
+    <div class="spinner-container" style="margin: 2em auto">
+      <div style="max-width: 50px; max-height: 50px;"></div>
+    </div>
+  </div>
+
+  <div *ngIf="questionsSvc.isFilterEngaged()" class="filters-engaged">Showing Only Filtered Questions</div>
+
+
+  <!-- top level -->
+  <div *ngFor="let d of domains">
+
+    <!-- (spacer) -->
+    <div class="mt-4"></div>
+
+    <!-- Domain Header Level -->
+    <div class="domain-group-heading" *ngIf="!!d.DomainName && d.DomainName.length > 0">
+      <app-maturity-filter [domainName]="d.DomainName" (filtersChanged)="refreshQuestionVisibility()">
+      </app-maturity-filter>
+      <div>
+        {{ d.DomainName }}
+      </div>
+    </div>
+
+    <!-- Loop Groups within Domain -->
+    <div *ngFor="let g of d.QuestionGroups" style="margin-bottom: 2em;"
+      [id]="g.NavigationGUID">
+    
+        <!-- Question Group Heading / Category-->
+        <div *ngIf="g.ShowOverrideHeader" class="group-heading" [class.display-none]="!g.Visible">
+          {{ g.Symbol_Name + ' - ' + g.ComponentName }}
+        </div>
+
+
+      <!-- Question Group Heading / Category-->
+      <div *ngIf="!g.Symbol_Name" class="group-heading" [ngClass]="addDomainPad(g.DomainName)" [class.display-none]="!g.Visible">
+        {{ g.GroupHeadingText }}
+        {{ (!g.DomainName && !!g.StandardShortName) ? ' - ' + g.StandardShortName : '' }}
+      </div>
+
+      <!-- Subcategory -->
+      <div *ngFor="let sg of g.SubCategories" [ngClass]="addDomainPad(g.DomainName)" style="margin-bottom: 1em;"
+        [class.display-none]="!sg.Visible" [id]="sg.NavigationGUID">
+
+        <!-- Questions within subcategory -->
+        <app-question-block #questionBlock [mySubCategory]="sg"
+          (changeComponents)="updateComponentsOverride()"
+        ></app-question-block>
+
+      </div>
+
+    </div>
+
+    <!-- indicates when all maturity filters turned off for this domain -->
+    <div *ngIf="domains != null && questionsSvc.maturityFiltersAllOff(d.DomainName)"
+      class="alert-warning mt-4 mb-4 d-flex flex-row justify-content-center align-items-center flex-11a">
+      <span class="p-md-3 p-2 fs-large cset-icons-exclamation-triangle"></span>
+      <span class="fs-base-3 p-2 d-flex flex-column justify-content-center flex-11a">
+        All maturity filters are deselected for this domain. Select one or more maturity levels to view questions.
+      </span>
+    </div>
+  </div>
+
+  <div *ngIf="questionsSvc.isFilterEngaged() && visibleGroupCount() === 0"
+    class="alert-warning mt-4 mb-4 d-flex flex-row justify-content-center align-items-center flex-11a">
+    <span class="p-md-3 p-2 fs-large cset-icons-exclamation-triangle"></span>
+    <span class="fs-base-3 p-2 d-flex flex-column justify-content-center flex-11a">
+      There are no questions visible for the current filters or search criteria. Please change your selections and try again.
+    </span>
+  </div>
+
+  <div *ngIf="domains !== null && domains.length === 0"
+    class="alert-warning mt-4 mb-4 d-flex flex-row justify-content-center align-items-center flex-11a">
+    <span class="p-md-3 p-2 fs-large cset-icons-exclamation-triangle"></span>
+    <span class="fs-base-3 p-2 d-flex flex-column justify-content-center flex-11a">
+      There are no applicable questions/requirements to display. Check the assessment's SAL level and Standards
+      selection.
+    </span>
+  </div>
+
+
+  <div style="display: flex; justify-content: space-between;">
+    <button class="btn btn-primary" (click)="navSvc2.navBack('questions')">Back</button>
+    <button class="btn btn-primary" (click)="navSvc2.navNext('questions')">Next</button>
+  </div>
+
+</div>

@@ -1,0 +1,94 @@
+<!---------------------- 
+
+   Copyright 2019 Battelle Energy Alliance, LLC  
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy 
+  of this software and associated documentation files (the "Software"), to deal 
+  in the Software without restriction, including without limitation the rights 
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
+  copies of the Software, and to permit persons to whom the Software is 
+  furnished to do so, subject to the following conditions: 
+ 
+  The above copyright notice and this permission notice shall be included in all 
+  copies or substantial portions of the Software. 
+ 
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+  SOFTWARE. 
+-------------------------->
+<div class="white-panel oy-auto h-0 d-flex flex-column flex-11a">
+  <h3>Analysis Dashboard</h3>
+  <div *ngIf="!initialized">
+    <div class="spinner-container" style="margin-left: auto; margin-right: auto;">
+      <div style="max-width: 50px; max-height: 50px;"></div>
+    </div>
+  </div>
+  <div class="d-flex flex-column flex-11a" [class.d-none]="!initialized">
+    <div class="chart d-flex flex-column flex-00a">
+      <h3>Score</h3>
+      <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 2em;">
+
+        <div id="overall-score" class="score-container" style="margin: 0 4px;">
+          <div>Overall Score</div>
+          <div style="padding: .3rem; font-size: 2rem;">{{overallScoreDisplay}}</div>
+        </div>
+
+        <div style="flex-direction: column">
+          <div id="standard-score" class="score-container">
+            <div>Standard-based</div>
+            <div style="padding: .3rem" [class.has-score]="standardBasedScore > 0">{{standardBasedScoreDisplay}}</div>
+          </div>
+
+          <div id="component-score" class="score-container">
+            <div>Component-based</div>
+            <div style="padding: .3rem" [class.has-score]="componentBasedScore > 0">{{componentBasedScoreDisplay}}</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="chart d-flex flex-column flex-00a">
+      <h3>Assessment Compliance</h3>
+      <canvas id="canvasAssessmentCompliance">{{assessComplChart}}</canvas>
+    </div>
+
+    <div class="chart d-flex flex-column flex-00a">
+      <h3>Top Ranked Categories</h3>
+      <canvas id="canvasTopCategories">{{topCategChart}}</canvas>
+    </div>
+
+    <div class="chart d-flex flex-column flex-00a">
+      <h3>Standards Summary</h3>
+      <div *ngIf="stdsSummChart == null">
+          <div class="spinner-container" style="margin: 2em auto">
+            <div style="max-width: 50px; max-height: 50px;"></div>
+          </div>
+        </div>
+      <canvas id="canvasStandardSummary" style="max-width: 800px; margin: 0 auto;">{{stdsSummChart}}</canvas>
+    </div>
+
+    <div class="chart d-flex flex-column flex-00a">
+      <h3>Components Summary</h3>
+      <div *ngIf="!compSummInitialized">
+        <div class="spinner-container" style="margin: 2em auto">
+          <div style="max-width: 50px; max-height: 50px;"></div>
+        </div>
+      </div>
+      <canvas id="canvasComponentSummary" style="max-width: 800px; margin: 0 auto;" [class.d-none]="compSummInitialized && componentCount === 0">{{compSummChart}}</canvas>
+      <div [class.d-none]="!compSummInitialized || componentCount > 0">
+        <hr style="width: 30%"> There are no components on the diagram.
+      </div>
+    </div>
+
+
+    <div class="mt-3 mb-2r d-flex justify-content-between flex-00a">
+      <button class="btn btn-primary" (click)="navSvc2.navBack('dashboard')">Back</button>
+      <button class="btn btn-primary" (click)="navSvc2.navNext('dashboard')">Next</button>
+    </div>
+  </div>
+</div>
